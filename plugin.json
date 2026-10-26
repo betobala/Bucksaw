@@ -1,0 +1,23 @@
+{
+  "slug": "Bucksaw",
+  "name": "Bucksaw",
+  "version": "2.0.0",
+  "license": "proprietary",
+  "brand": "Bucksaw",
+  "author": "Beto",
+  "authorEmail": "",
+  "authorUrl": "",
+  "pluginUrl": "",
+  "manualUrl": "",
+  "sourceUrl": "",
+  "donateUrl": "",
+  "changelogUrl": "",
+  "modules": [
+    {
+      "slug": "Bucksaw",
+      "name": "Bucksaw",
+      "description": "Stereo super-oscillator: 3 voices of 7 waves, detune, saw-to-square morph and linear FM",
+      "tags": ["Oscillator", "Stereo", "Polyphonic"]
+    }
+  ]
+}
