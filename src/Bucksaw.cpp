@@ -276,24 +276,24 @@ struct PanelArt : Widget {
 		bb::outRing(vg, Vec(RX, ROW[3]), k, 4.1f);
 
 		std::shared_ptr<window::Font> stencil = pluginFont("BlackOpsOne-Regular.ttf");
-		std::shared_ptr<window::Font> bold = pluginFont("SpaceMono-Bold.ttf");
+		std::shared_ptr<window::Font> bold = pluginFont("BebasNeue-Regular.ttf");
 		if (!stencil || !bold)
 			return;
 		bb::nameplate(vg, CX, 7.4f, "BUCKSAW", stencil->handle, k, 2.7f);
 		nvgFontFaceId(vg, bold->handle);
 		nvgTextLetterSpacing(vg, mm2px(0.06f));
-		nvgFontSize(vg, mm2px(2.0f));
+		nvgFontSize(vg, mm2px(4.0f));
 		bb::label(vg, Vec(NOTE_LED.x, NOTE_LED.y + 2.9f), "NOTE", k.fg);
 		bb::label(vg, Vec(ALT_LED.x, ALT_LED.y + 2.9f), "ALT", k.fg);
-		nvgFontSize(vg, mm2px(2.4f));
+		nvgFontSize(vg, mm2px(4.8f));
 		bb::label(vg, Vec(CX, DETUNE_POS.y + KNOB_R + 3.0f), "DETUNE", k.fg);
 		bb::label(vg, Vec(CX, MORPH_POS.y + KNOB_R + 3.0f), "MORPH", k.fg);
 		const char* left[4] = {"DTN", "V/O 1", "V/O 2", "V/O 3"};
 		const char* right[4] = {"MRPH", "FM", "OUT L", "OUT R"};
-		nvgFontSize(vg, mm2px(2.0f));
+		nvgFontSize(vg, mm2px(4.0f));
 		for (int i = 0; i < 4; i++) {
 			bb::label(vg, Vec(LX, ROW[i] + 5.4f), left[i], k.fg);
-			bb::label(vg, Vec(RX, ROW[i] + 5.4f), right[i], i >= 2 ? k.red : k.fg);
+			bb::label(vg, Vec(RX, ROW[i] + (i >= 2 ? 6.4f : 5.4f)), right[i], i >= 2 ? k.red : k.fg);
 		}
 		nvgTextLetterSpacing(vg, 0.f);
 	}
