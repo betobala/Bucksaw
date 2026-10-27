@@ -2,7 +2,7 @@
 // Recreated from the published behaviour of the Acid Rain Technology Chainsaw (docs/manual.txt).
 #include <rack.hpp>
 #include "Saw.hpp"
-#include "Controls4ms.hpp"
+#include "Controls.hpp"
 #include "Stencil.hpp"
 
 using namespace rack;
