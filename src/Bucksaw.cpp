@@ -3,6 +3,7 @@
 #include <rack.hpp>
 #include "Saw.hpp"
 #include "Controls4ms.hpp"
+#include "Stencil.hpp"
 
 using namespace rack;
 
@@ -95,47 +96,15 @@ struct Bucksaw : Module {
 };
 
 // ---------------------------------------------------------------- themes
-struct BTheme {
-	NVGcolor panel, ink, grey, plate, plateInk, accent;
-};
+// betobullet stencil (docs/art/STYLE.md): theme 0 = black panel, 1 = white panel
+using bb::THEME_NAMES;
 static const int NUM_THEMES = 2;
-static const char* const THEME_NAMES[NUM_THEMES] = {"Bone", "Slate"};
-
-static BTheme bTheme(int t) {
-	BTheme k;
-	if (t == 1) {
-		k.panel = nvgRGB(0x17, 0x19, 0x1B);
-		k.ink = nvgRGB(0xE6, 0xE8, 0xE8);
-		k.grey = nvgRGB(0x8A, 0x8D, 0x93);
-		k.plate = nvgRGB(0x0E, 0x11, 0x13);
-		k.plateInk = nvgRGB(0xE6, 0xE8, 0xE8);
-		k.accent = nvgRGB(0xC6, 0xF0, 0x3C);
-	}
-	else {
-		k.panel = nvgRGB(0xE8, 0xE6, 0xE1);
-		k.ink = nvgRGB(0x0F, 0x12, 0x16);
-		k.grey = nvgRGB(0x6E, 0x71, 0x77);
-		k.plate = nvgRGB(0x1B, 0x1E, 0x24);
-		k.plateInk = nvgRGB(0xF6, 0xF4, 0xEF);
-		k.accent = nvgRGB(0x7F, 0xB8, 0x00);
-	}
-	return k;
-}
 
 namespace fms {
 const Colors& colors(const engine::Module* m) {
-	static const Colors bone = {
-		nvgRGB(0x11, 0x11, 0x11), nvgRGB(0x3A, 0x3A, 0x3A), nvgRGB(0xF6, 0xF4, 0xEF), nvgRGB(0x0F, 0x12, 0x16),
-		nvgRGB(0xD3, 0xD3, 0xD0), nvgRGB(0xF7, 0xF7, 0xF5), nvgRGB(0x8E, 0x8E, 0x8A), nvgRGB(0x5C, 0x5C, 0x5A), nvgRGB(0x05, 0x05, 0x05),
-		nvgRGB(0xF4, 0xF2, 0xEA), nvgRGB(0xFF, 0xFF, 0xFF), nvgRGB(0x9C, 0xE0, 0x00), nvgRGB(0xD8, 0xFF, 0x7A), nvgRGB(0x0F, 0x12, 0x16),
-		nvgRGB(0xFB, 0xFB, 0xF9)};
-	static const Colors slate = {
-		nvgRGB(0x0B, 0x0B, 0x0D), nvgRGB(0x3A, 0x3B, 0x3F), nvgRGB(0xF6, 0xF4, 0xEF), nvgRGB(0xE6, 0xE8, 0xE8),
-		nvgRGB(0xD3, 0xD3, 0xD0), nvgRGB(0xF7, 0xF7, 0xF5), nvgRGB(0x8E, 0x8E, 0x8A), nvgRGB(0x5C, 0x5C, 0x5A), nvgRGB(0x05, 0x05, 0x05),
-		nvgRGB(0x2A, 0x2C, 0x30), nvgRGB(0x40, 0x42, 0x46), nvgRGB(0xC6, 0xF0, 0x3C), nvgRGB(0xE8, 0xFF, 0x9A), nvgRGB(0x6B, 0x6F, 0x75),
-		nvgRGB(0xFB, 0xFB, 0xF9)};
+	static const Colors black = bb::controlColors(0), white = bb::controlColors(1);
 	int t = m ? static_cast<const Bucksaw*>(m)->theme : 0;
-	return t == 1 ? slate : bone;
+	return t == 1 ? white : black;
 }
 }  // namespace fms
 
@@ -294,68 +263,45 @@ struct Led : TransparentWidget {
 struct PanelArt : Widget {
 	Bucksaw* module = nullptr;
 
-	void text(NVGcontext* vg, Vec mm, const char* s) {
-		nvgText(vg, mm2px(mm.x), mm2px(mm.y), s, NULL);
-	}
-
 	void draw(const DrawArgs& args) override {
-		BTheme k = bTheme(module ? module->theme : 0);
+		bb::Ink k = bb::ink(module ? module->theme : 0);
+		bb::Ink inv = {k.fg, k.bg};
 		NVGcontext* vg = args.vg;
 		nvgBeginPath(vg);
 		nvgRect(vg, 0, 0, box.size.x, box.size.y);
-		nvgFillColor(vg, k.panel);
+		nvgFillColor(vg, k.bg);
 		nvgFill(vg);
 
-		// the two outputs on a dark plate in the right column
-		nvgBeginPath(vg);
-		nvgRoundedRect(vg, mm2px(RX - 4.5f), mm2px(ROW[2] - 4.8f), mm2px(9.0f), mm2px(ROW[3] - ROW[2] + 11.4f), mm2px(2.2f));
-		nvgFillColor(vg, k.plate);
+		// the encoder and the two knobs in notched frames
+		bb::notchedFrame(vg, Rect(Vec(1.2f, 11.8f), Vec(W - 2.4f, 19.8f)), k, 2.0f, 1.2f);
+		bb::notchedFrame(vg, Rect(Vec(1.2f, 31.0f), Vec(W - 2.4f, 30.4f)), k, 2.0f, 1.2f);
+		bb::hazard(vg, Rect(Vec(1.2f, 62.0f), Vec(W - 2.4f, 1.6f)), k, 1.8f);
+		// jack field: inputs framed, the two outputs on a solid plate
+		bb::frame(vg, Rect(Vec(1.2f, ROW[0] - 4.4f), Vec(W - 2.4f, ROW[3] - ROW[0] + 11.6f)), k, 2.0f, 0.5f);
+		bb::chamferPath(vg, Rect(Vec(RX - 4.5f, ROW[2] - 4.4f), Vec(9.0f, ROW[3] - ROW[2] + 10.8f)), 1.4f);
+		nvgFillColor(vg, k.fg);
 		nvgFill(vg);
 
-		// a saw tooth line under the name
-		nvgBeginPath(vg);
-		for (int i = 0; i <= 4; i++) {
-			float x0 = 3.0f + i * (W - 6.0f) / 4.f;
-			if (i == 0)
-				nvgMoveTo(vg, mm2px(x0), mm2px(10.2f));
-			else {
-				nvgLineTo(vg, mm2px(x0), mm2px(8.4f));
-				nvgLineTo(vg, mm2px(x0), mm2px(10.2f));
-			}
-		}
-		nvgStrokeColor(vg, k.accent);
-		nvgStrokeWidth(vg, mm2px(0.4f));
-		nvgLineJoin(vg, NVG_MITER);
-		nvgStroke(vg);
-
-		std::shared_ptr<window::Font> logo = pluginFont("Syne-Bold.ttf");
-		std::shared_ptr<window::Font> reg = pluginFont("SpaceMono-Regular.ttf");
-		if (!logo || !reg)
+		std::shared_ptr<window::Font> stencil = pluginFont("BlackOpsOne-Regular.ttf");
+		if (!stencil)
 			return;
-		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-		nvgFontFaceId(vg, logo->handle);
-		nvgFontSize(vg, mm2px(4.0f));
-		nvgTextLetterSpacing(vg, -mm2px(0.1f));
-		nvgFillColor(vg, k.ink);
-		text(vg, Vec(CX, 5.2f), "bucksaw");
-		nvgTextLetterSpacing(vg, 0.f);
-
-		nvgFontFaceId(vg, reg->handle);
+		bb::title(vg, Rect(Vec(1.4f, 5.4f), Vec(W - 2.8f, 5.2f)), "BUCKSAW", stencil->handle, k, 2.7f);
+		nvgFontFaceId(vg, stencil->handle);
+		nvgTextLetterSpacing(vg, mm2px(0.06f));
+		nvgFontSize(vg, mm2px(2.0f));
+		bb::plate(vg, Vec(NOTE_LED.x, NOTE_LED.y + 2.9f), "NOTE", k, 6.4f, 2.4f);
+		bb::plate(vg, Vec(ALT_LED.x, ALT_LED.y + 2.9f), "ALT", k, 6.4f, 2.4f);
 		nvgFontSize(vg, mm2px(2.3f));
-		text(vg, Vec(NOTE_LED.x, NOTE_LED.y + 2.9f), "note");
-		text(vg, Vec(ALT_LED.x, ALT_LED.y + 2.9f), "alt");
-		nvgFontSize(vg, mm2px(2.6f));
-		text(vg, Vec(CX, DETUNE_POS.y + KNOB_R + 3.0f), "detune");
-		text(vg, Vec(CX, MORPH_POS.y + KNOB_R + 3.0f), "morph");
-		const char* left[4] = {"detune", "v/o 1", "v/o 2", "v/o 3"};
-		const char* right[4] = {"morph", "FM", "out L", "out R"};
-		nvgFontSize(vg, mm2px(2.2f));
+		bb::plate(vg, Vec(CX, DETUNE_POS.y + KNOB_R + 3.0f), "DETUNE", k, 13.0f, 2.8f);
+		bb::plate(vg, Vec(CX, MORPH_POS.y + KNOB_R + 3.0f), "MORPH", k, 13.0f, 2.8f);
+		const char* left[4] = {"DTN", "V/O 1", "V/O 2", "V/O 3"};
+		const char* right[4] = {"MRPH", "FM", "OUT L", "OUT R"};
+		nvgFontSize(vg, mm2px(1.9f));
 		for (int i = 0; i < 4; i++) {
-			nvgFillColor(vg, k.ink);
-			text(vg, Vec(LX, ROW[i] + 5.2f), left[i]);
-			nvgFillColor(vg, i >= 2 ? k.plateInk : k.ink);
-			text(vg, Vec(RX, ROW[i] + 5.2f), right[i]);
+			bb::plate(vg, Vec(LX, ROW[i] + 5.2f), left[i], k, 7.6f, 2.4f);
+			bb::plate(vg, Vec(RX, ROW[i] + 5.2f), right[i], i >= 2 ? inv : k, 7.6f, 2.4f);
 		}
+		nvgTextLetterSpacing(vg, 0.f);
 	}
 };
 
