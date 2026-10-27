@@ -265,41 +265,35 @@ struct PanelArt : Widget {
 
 	void draw(const DrawArgs& args) override {
 		bb::Ink k = bb::ink(module ? module->theme : 0);
-		bb::Ink inv = {k.fg, k.bg};
 		NVGcontext* vg = args.vg;
 		nvgBeginPath(vg);
 		nvgRect(vg, 0, 0, box.size.x, box.size.y);
 		nvgFillColor(vg, k.bg);
 		nvgFill(vg);
 
-		// the encoder and the two knobs in notched frames
-		bb::notchedFrame(vg, Rect(Vec(1.2f, 11.8f), Vec(W - 2.4f, 19.8f)), k, 2.0f, 1.2f);
-		bb::notchedFrame(vg, Rect(Vec(1.2f, 31.0f), Vec(W - 2.4f, 30.4f)), k, 2.0f, 1.2f);
-		bb::hazard(vg, Rect(Vec(1.2f, 62.0f), Vec(W - 2.4f, 1.6f)), k, 1.8f);
-		// jack field: inputs framed, the two outputs on a solid plate
-		bb::frame(vg, Rect(Vec(1.2f, ROW[0] - 4.4f), Vec(W - 2.4f, ROW[3] - ROW[0] + 11.6f)), k, 2.0f, 0.5f);
-		bb::chamferPath(vg, Rect(Vec(RX - 4.5f, ROW[2] - 4.4f), Vec(9.0f, ROW[3] - ROW[2] + 10.8f)), 1.4f);
-		nvgFillColor(vg, k.fg);
-		nvgFill(vg);
+		bb::rule(vg, 2.0f, W - 2.0f, ROW[0] - 5.6f, k);
+		bb::outRing(vg, Vec(RX, ROW[2]), k, 4.1f);
+		bb::outRing(vg, Vec(RX, ROW[3]), k, 4.1f);
 
 		std::shared_ptr<window::Font> stencil = pluginFont("BlackOpsOne-Regular.ttf");
-		if (!stencil)
+		std::shared_ptr<window::Font> bold = pluginFont("SpaceMono-Bold.ttf");
+		if (!stencil || !bold)
 			return;
-		bb::title(vg, Rect(Vec(1.4f, 5.4f), Vec(W - 2.8f, 5.2f)), "BUCKSAW", stencil->handle, k, 2.7f);
-		nvgFontFaceId(vg, stencil->handle);
+		bb::nameplate(vg, CX, 7.4f, "BUCKSAW", stencil->handle, k, 2.7f);
+		nvgFontFaceId(vg, bold->handle);
 		nvgTextLetterSpacing(vg, mm2px(0.06f));
 		nvgFontSize(vg, mm2px(2.0f));
-		bb::plate(vg, Vec(NOTE_LED.x, NOTE_LED.y + 2.9f), "NOTE", k, 6.4f, 2.4f);
-		bb::plate(vg, Vec(ALT_LED.x, ALT_LED.y + 2.9f), "ALT", k, 6.4f, 2.4f);
-		nvgFontSize(vg, mm2px(2.3f));
-		bb::plate(vg, Vec(CX, DETUNE_POS.y + KNOB_R + 3.0f), "DETUNE", k, 13.0f, 2.8f);
-		bb::plate(vg, Vec(CX, MORPH_POS.y + KNOB_R + 3.0f), "MORPH", k, 13.0f, 2.8f);
+		bb::label(vg, Vec(NOTE_LED.x, NOTE_LED.y + 2.9f), "NOTE", k.fg);
+		bb::label(vg, Vec(ALT_LED.x, ALT_LED.y + 2.9f), "ALT", k.fg);
+		nvgFontSize(vg, mm2px(2.4f));
+		bb::label(vg, Vec(CX, DETUNE_POS.y + KNOB_R + 3.0f), "DETUNE", k.fg);
+		bb::label(vg, Vec(CX, MORPH_POS.y + KNOB_R + 3.0f), "MORPH", k.fg);
 		const char* left[4] = {"DTN", "V/O 1", "V/O 2", "V/O 3"};
 		const char* right[4] = {"MRPH", "FM", "OUT L", "OUT R"};
-		nvgFontSize(vg, mm2px(1.9f));
+		nvgFontSize(vg, mm2px(2.0f));
 		for (int i = 0; i < 4; i++) {
-			bb::plate(vg, Vec(LX, ROW[i] + 5.2f), left[i], k, 7.6f, 2.4f);
-			bb::plate(vg, Vec(RX, ROW[i] + 5.2f), right[i], i >= 2 ? inv : k, 7.6f, 2.4f);
+			bb::label(vg, Vec(LX, ROW[i] + 5.4f), left[i], k.fg);
+			bb::label(vg, Vec(RX, ROW[i] + 5.4f), right[i], i >= 2 ? k.red : k.fg);
 		}
 		nvgTextLetterSpacing(vg, 0.f);
 	}
