@@ -279,7 +279,7 @@ struct PanelArt : Widget {
 		std::shared_ptr<window::Font> bold = pluginFont("BebasNeue-Regular.ttf");
 		if (!stencil || !bold)
 			return;
-		bb::nameplate(vg, CX, 7.4f, "BUCKSAW", stencil->handle, k, 2.7f);
+		bb::nameplate(vg, CX, 6.6f, "BUCKSAW", stencil->handle, k, 2.7f, bb::MARK_SAWS, 15.0f, 2.6f);
 		nvgFontFaceId(vg, bold->handle);
 		nvgTextLetterSpacing(vg, mm2px(0.06f));
 		nvgFontSize(vg, mm2px(4.0f));
